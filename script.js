@@ -271,4 +271,75 @@ function loadNews() {
             });
         })
         .catch(error => console.error('Error loading news:', error));
-} 
+}
+
+// 更新加密貨幣數據
+async function updateCryptoData() {
+    try {
+        const response = await fetch('prices.json');
+        const data = await response.json();
+        
+        // 更新最後更新時間
+        const lastUpdated = document.querySelector('.last-updated');
+        lastUpdated.textContent = `最後更新: ${new Date().toLocaleTimeString('zh-TW')}`;
+        
+        // 更新市場概況
+        document.getElementById('totalMarketCap').textContent = `$${formatNumber(data.totalMarketCap)}`;
+        document.getElementById('totalVolume').textContent = `$${formatNumber(data.totalVolume)}`;
+        document.getElementById('btcDominance').textContent = `${data.btcDominance}%`;
+        
+        // 更新加密貨幣卡片
+        const cryptoGrid = document.getElementById('cryptoGrid');
+        cryptoGrid.innerHTML = '';
+        
+        data.cryptos.forEach(crypto => {
+            const changeClass = crypto.change24h >= 0 ? 'positive' : 'negative';
+            const changeIcon = crypto.change24h >= 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+            
+            cryptoGrid.innerHTML += `
+                <div class="crypto-card">
+                    <div class="crypto-header">
+                        <i class="crypto-icon ${crypto.icon}"></i>
+                        <h2>${crypto.name} <span class="crypto-symbol">${crypto.symbol}</span></h2>
+                    </div>
+                    <div class="crypto-price">
+                        <span class="price">$${formatNumber(crypto.price)}</span>
+                        <span class="change ${changeClass}">
+                            <i class="fas ${changeIcon}"></i>
+                            ${Math.abs(crypto.change24h)}%
+                        </span>
+                    </div>
+                    <div class="crypto-details">
+                        <div class="volume">
+                            <span>24h 交易量:</span>
+                            <span>$${formatNumber(crypto.volume24h)}</span>
+                        </div>
+                        <div class="high-low">
+                            <span>高: $${formatNumber(crypto.high24h)}</span>
+                            <span>低: $${formatNumber(crypto.low24h)}</span>
+                        </div>
+                    </div>
+                    <div class="crypto-chart">
+                        <canvas id="chart-${crypto.symbol.toLowerCase()}"></canvas>
+                    </div>
+                </div>
+            `;
+        });
+        
+        // 更新圖表
+        updateCharts(data.cryptos);
+        
+    } catch (error) {
+        console.error('更新數據時發生錯誤:', error);
+    }
+}
+
+// 初始化並設置定時更新
+async function initialize() {
+    await updateCryptoData();
+    // 每分鐘更新一次數據
+    setInterval(updateCryptoData, 60000);
+}
+
+// 頁面加載時初始化
+document.addEventListener('DOMContentLoaded', initialize); 
