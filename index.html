@@ -130,46 +130,61 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
     <script>
-    fetch('news.json')
-      .then(res => res.json())
-      .then(newsList => {
-        const newsGrid = document.getElementById('newsGrid');
-        newsGrid.innerHTML = '';
-        newsList.forEach(news => {
-          // 限制摘要長度為 100 個字符
-          const shortSnippet = news.snippet.length > 100 ? 
-            news.snippet.substring(0, 100) + '...' : 
-            news.snippet;
-          
-          newsGrid.innerHTML += `
-            <article class="news-card">
-              <div class="news-image">
-                <img src="${news.image_url}" alt="${news.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Crypto+News'">
-              </div>
-              <div class="news-content">
-                <a href="${news.link}" target="_blank">
-                  <h3>${news.title}</h3>
-                </a>
-                <p class="news-snippet">${shortSnippet}</p>
-                <div class="news-meta">
-                  <span class="news-source">${news.source}</span>
-                  <span class="news-date">${new Date(news.published_at * 1000).toLocaleDateString('zh-TW', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</span>
-                </div>
-              </div>
-            </article>
-          `;
-        });
-      });
-    </script>
+    // 格式化數字
+    function formatNumber(num) {
+        if (num >= 1e12) {
+            return `${(num / 1e12).toFixed(2)}T`;
+        } else if (num >= 1e9) {
+            return `${(num / 1e9).toFixed(2)}B`;
+        } else if (num >= 1e6) {
+            return `${(num / 1e6).toFixed(2)}M`;
+        } else if (num >= 1e3) {
+            return `${(num / 1e3).toFixed(2)}K`;
+        }
+        return num.toFixed(2);
+    }
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    // 加載新聞
+    function loadNews() {
+        fetch('news.json')
+            .then(res => res.json())
+            .then(newsList => {
+                const newsGrid = document.getElementById('newsGrid');
+                newsGrid.innerHTML = '';
+                newsList.forEach(news => {
+                    const shortSnippet = news.snippet.length > 100 ? 
+                        news.snippet.substring(0, 100) + '...' : 
+                        news.snippet;
+                    
+                    newsGrid.innerHTML += `
+                        <article class="news-card">
+                            <div class="news-image">
+                                <img src="${news.image_url}" alt="${news.title}" onerror="this.src='https://via.placeholder.com/300x200?text=Crypto+News'">
+                            </div>
+                            <div class="news-content">
+                                <a href="${news.link}" target="_blank">
+                                    <h3>${news.title}</h3>
+                                </a>
+                                <p class="news-snippet">${shortSnippet}</p>
+                                <div class="news-meta">
+                                    <span class="news-source">${news.source}</span>
+                                    <span class="news-date">${new Date(news.published_at * 1000).toLocaleDateString('zh-TW', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}</span>
+                                </div>
+                            </div>
+                        </article>
+                    `;
+                });
+            });
+    }
+
+    // 加載加密貨幣數據
+    function loadCryptoData() {
         fetch('prices.json')
             .then(response => response.json())
             .then(data => {
@@ -221,21 +236,13 @@
                 // 初始化圖表
                 updateCharts(data.cryptos);
             });
-    });
-
-    // 格式化數字
-    function formatNumber(num) {
-        if (num >= 1e12) {
-            return `${(num / 1e12).toFixed(2)}T`;
-        } else if (num >= 1e9) {
-            return `${(num / 1e9).toFixed(2)}B`;
-        } else if (num >= 1e6) {
-            return `${(num / 1e6).toFixed(2)}M`;
-        } else if (num >= 1e3) {
-            return `${(num / 1e3).toFixed(2)}K`;
-        }
-        return num.toFixed(2);
     }
+
+    // 頁面加載時初始化
+    document.addEventListener('DOMContentLoaded', () => {
+        loadNews();
+        loadCryptoData();
+    });
     </script>
 </body>
 </html> 
